@@ -138,10 +138,10 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                              device,
                              self.urd.uniform_random_loader(self.N_VALIDATION),
                              prefix="Train")
-                self.save_testdata_prediction(model=model, device=device)
+                # self.save_testdata_prediction(model=model, device=device)
 
-        if model is not None:
-            self.save_testdata_prediction(model=model, device=device)
+        # if model is not None:
+        #     self.save_testdata_prediction(model=model, device=device)
 
     def save_prediction(self, predition):
         if isinstance(predition, (np.ndarray, )):

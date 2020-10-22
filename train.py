@@ -8,7 +8,7 @@ def user_round_train(X, Y, model, device, debug=False):
     data = CompDataset(X=X, Y=Y)
     train_loader = torch.utils.data.DataLoader(
         data,
-        batch_size=320,
+        batch_size=3200,
         shuffle=True,
     )
 
@@ -35,11 +35,14 @@ def user_round_train(X, Y, model, device, debug=False):
         real.extend(target.reshape(-1).tolist())
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
+    correct_rate = correct / len(train_loader.dataset)
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * correct_rate
 
     if debug:
         print('Training Loss: {:<10.2f}, accuracy: {:<8.2f}'.format(
-            total_loss, 100. * correct / len(train_loader.dataset)))
+            total_loss, 100. * correct_rate))
+
+    # better result return larger grad
 
     return grads
