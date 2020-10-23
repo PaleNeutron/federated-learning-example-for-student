@@ -96,6 +96,7 @@ def main():
                        'shuffle': True}
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
+        print("use cuda with {}".format(cuda_kwargs))
 
 #     transform=transforms.Compose([
 #         transforms.ToTensor(),
