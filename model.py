@@ -72,7 +72,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
 
     def setUp(self):
         self.seed = 0
-        self.use_cuda = False
+        self.use_cuda = True
         self.batch_size = 64
         self.test_batch_size = 1000
         self.lr = 0.001
@@ -108,7 +108,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
 
     def test_federated_averaging(self):
         torch.manual_seed(self.seed)
-        device = torch.device("cuda" if self.use_cuda else "cpu")
+        device = torch.device("cuda" if self.use_cuda and torch.cuda.is_available() else "cpu")
 
         training_start = datetime.now()
         model = None

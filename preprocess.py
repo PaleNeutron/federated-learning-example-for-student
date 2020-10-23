@@ -129,7 +129,7 @@ class UserRoundData(object):
                 if data is not None:
                     _user_datasets.append(data)
                 n += 1
-                if n > 2:
+                if n > 20:
                     break
 
         for x, y in _user_datasets:
