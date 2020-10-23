@@ -167,7 +167,7 @@ def normlize_data(df, have_target=True):
 
     # Standard
     ss = StandardScaler()
-    X = np.concatenate([ss.fit_transform(one_hot_df), df.drop(tags, axis=1).values], axis=1)
+    X = np.concatenate([one_hot_df, ss.fit_transform(df.drop(tags, axis=1).values)], axis=1)
     if have_target:
         return X.astype("float32"), y
     else:
