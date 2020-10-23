@@ -78,7 +78,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.lr = 0.001
         self.n_max_rounds = 10000
         self.log_interval = 10
-        self.n_round_samples = 1600
+        self.n_round_samples = 100000
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
 
@@ -113,35 +113,35 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         training_start = datetime.now()
         model = None
         for r in range(1, self.n_max_rounds + 1):
-            path = self.ps.get_latest_model()
             start = datetime.now()
             for u in range(0, self.n_users):
                 model = FLModel()
+                path = self.ps.get_latest_model()
                 model.load_state_dict(torch.load(path))
                 model = model.to(device)
                 x, y = self.urd.round_data(
                     user_idx=u,
                     n_round=r,
                     n_round_samples=self.n_round_samples)
-                grads = user_round_train(X=x, Y=y, model=model, device=device)
+                grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True)
                 self.ps.receive_grads_info(grads=grads)
 
-            self.ps.aggregate()
+                self.ps.aggregate()
             print('\nRound {} cost: {}, total training cost: {}'.format(
                 r,
                 datetime.now() - start,
                 datetime.now() - training_start,
             ))
 
-            if model is not None and r % 200 == 0:
+            if model is not None and r % 10 == 0:
                 self.predict(model,
                              device,
                              self.urd.uniform_random_loader(self.N_VALIDATION),
                              prefix="Train")
-                # self.save_testdata_prediction(model=model, device=device)
+                self.save_testdata_prediction(model=model, device=device)
 
-        # if model is not None:
-        #     self.save_testdata_prediction(model=model, device=device)
+        if model is not None:
+            self.save_testdata_prediction(model=model, device=device)
 
     def save_prediction(self, predition):
         if isinstance(predition, (np.ndarray, )):
@@ -152,6 +152,8 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
 
     def save_testdata_prediction(self, model, device):
         loader = get_test_loader(batch_size=1000)
+        if not loader:
+            return
         prediction = []
         with torch.no_grad():
             for data in loader:

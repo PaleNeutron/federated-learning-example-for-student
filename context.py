@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from aggretator import aggregate_grads
+from torch.optim.lr_scheduler import StepLR
 
 
 def random_str(n):
@@ -69,6 +70,7 @@ class PytorchModel(ModelBase):
         self.optimizer = getattr(self.torch.optim,
                                  self.optim_name)(self.model.parameters(),
                                                   lr=self.lr)
+        self.scheduler = StepLR(self.optimizer, step_size=1, gamma=0.95)
 
     def update_grads(self, grads):
         self.optimizer.zero_grad()
@@ -76,7 +78,8 @@ class PytorchModel(ModelBase):
         for k, v in self.model.named_parameters():
             v.grad = grads[k].type(v.dtype)
 
-        self.optimizer.step()
+        self.optimizer.step() 
+        self.scheduler.step()
 
     def update_params(self, params):
 

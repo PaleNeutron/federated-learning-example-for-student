@@ -8,7 +8,7 @@ def user_round_train(X, Y, model, device, debug=False):
     data = CompDataset(X=X, Y=Y)
     train_loader = torch.utils.data.DataLoader(
         data,
-        batch_size=3200,
+        batch_size=320,
         shuffle=True,
     )
 
@@ -33,6 +33,12 @@ def user_round_train(X, Y, model, device, debug=False):
         correct += pred.eq(target.view_as(pred)).sum().item()
         prediction.extend(pred.reshape(-1).tolist())
         real.extend(target.reshape(-1).tolist())
+
+        if batch_idx % 100 == 0:
+            print('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
     correct_rate = correct / len(train_loader.dataset)

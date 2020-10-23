@@ -6,6 +6,9 @@
 # ignore for mac
 .DS_Store
 
+# ignore pycharm
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -154,3 +157,4 @@ cython_debug/
 
 # Local History for Visual Studio Code
 .history/
+
