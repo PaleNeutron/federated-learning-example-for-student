@@ -1,5 +1,6 @@
 import os
 import pickle
+import ipaddress
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,96 @@ ATTACK_TYPES = {
     'benign': 13,
 }
 
+COLUMNS = ["Index",
+           "No.",
+           "Flow ID",
+           "Source IP",
+           "Source Port",
+           "Destination IP",
+           "Destination Port",
+           "Protocol",
+           "Timestamp",
+           "Flow Duration",
+           "Total Fwd Packets",
+           "Total Backward Packets",
+           "Total Length of Fwd Packets",
+           "Total Length of Bwd Packets",
+           "Fwd Packet Length Max",
+           "Fwd Packet Length Min",
+           "Fwd Packet Length Mean",
+           "Fwd Packet Length Std",
+           "Bwd Packet Length Max",
+           "Bwd Packet Length Min",
+           "Bwd Packet Length Mean",
+           "Bwd Packet Length Std",
+           "Flow Bytes/s",
+           "Flow Packets/s",
+           "Flow IAT Mean",
+           "Flow IAT Std",
+           "Flow IAT Max",
+           "Flow IAT Min",
+           "Fwd IAT Total",
+           "Fwd IAT Mean",
+           "Fwd IAT Std",
+           "Fwd IAT Max",
+           "Fwd IAT Min",
+           "Bwd IAT Total",
+           "Bwd IAT Mean",
+           "Bwd IAT Std",
+           "Bwd IAT Max",
+           "Bwd IAT Min",
+           "Fwd PSH Flags",
+           "Bwd PSH Flags",
+           "Fwd URG Flags",
+           "Bwd URG Flags",
+           "Fwd Header Length",
+           "Bwd Header Length",
+           "Fwd Packets/s",
+           "Bwd Packets/s",
+           "Min Packet Length",
+           "Max Packet Length",
+           "Packet Length Mean",
+           "Packet Length Std",
+           "Packet Length Variance",
+           "FIN Flag Count",
+           "SYN Flag Count",
+           "RST Flag Count",
+           "PSH Flag Count",
+           "ACK Flag Count",
+           "URG Flag Count",
+           "CWE Flag Count",
+           "ECE Flag Count",
+           "Down/Up Ratio",
+           "Average Packet Size",
+           "Avg Fwd Segment Size",
+           "Avg Bwd Segment Size",
+           "Fwd Header Length.1",
+           "Fwd Avg Bytes/Bulk",
+           "Fwd Avg Packets/Bulk",
+           "Fwd Avg Bulk Rate",
+           "Bwd Avg Bytes/Bulk",
+           "Bwd Avg Packets/Bulk",
+           "Bwd Avg Bulk Rate",
+           "Subflow Fwd Packets",
+           "Subflow Fwd Bytes",
+           "Subflow Bwd Packets",
+           "Subflow Bwd Bytes",
+           "Init_Win_bytes_forward",
+           "Init_Win_bytes_backward",
+           "act_data_pkt_fwd",
+           "min_seg_size_forward",
+           "Active Mean",
+           "Active Std",
+           "Active Max",
+           "Active Min",
+           "Idle Mean",
+           "Idle Std",
+           "Idle Max",
+           "Idle Min",
+           "SimillarHTTP",
+           "Inbound",
+           "Label", ]
+
 
 class CompDataset(object):
     def __init__(self, X, Y):
@@ -41,8 +132,7 @@ class CompDataset(object):
         return len(self._data)
 
 
-
-def get_tag_columns(df, limit=10, force_int = True):
+def get_tag_columns(df, limit=10, force_int=True):
     '''find cols contains continuous data'''
     numerics = ['int16', 'int32', 'int64']
     ret = []
@@ -56,18 +146,21 @@ def get_tag_columns(df, limit=10, force_int = True):
 
 def normlize_data(df, have_target=True):
     if type(df) == np.ndarray:
-        df = pd.DataFrame(df, columns=['Flow Duration', 'Total Fwd Packets', 'Total Backward Packets', 'Total Length of Fwd Packets', 'Total Length of Bwd Packets', 'Fwd Packet Length Max', 'Fwd Packet Length Min', 'Fwd Packet Length Mean', 'Fwd Packet Length Std', 'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Bwd Packet Length Mean', 'Bwd Packet Length Std', 'Flow Bytes/s', 'Flow Packets/s', 'Flow IAT Mean', 'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min', 'Fwd IAT Total', 'Fwd IAT Mean', 'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min', 'Bwd IAT Total', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Max', 'Bwd IAT Min', 'Fwd PSH Flags', 'Bwd PSH Flags', 'Fwd URG Flags', 'Bwd URG Flags', 'Fwd Header Length', 'Bwd Header Length', 'Fwd Packets/s', 'Bwd Packets/s', 'Min Packet Length', 'Max Packet Length', 'Packet Length Mean', 'Packet Length Std', 'Packet Length Variance', 'FIN Flag Count', 'SYN Flag Count', 'RST Flag Count', 'PSH Flag Count', 'ACK Flag Count', 'URG Flag Count', 'CWE Flag Count', 'ECE Flag Count', 'Down/Up Ratio', 'Average Packet Size', 'Avg Fwd Segment Size', 'Avg Bwd Segment Size', 'Fwd Header Length.1', 'Fwd Avg Bytes/Bulk', 'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate', 'Bwd Avg Bytes/Bulk', 'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate', 'Subflow Fwd Packets', 'Subflow Fwd Bytes', 'Subflow Bwd Packets', 'Subflow Bwd Bytes', 'Init_Win_bytes_forward', 'Init_Win_bytes_backward', 'act_data_pkt_fwd', 'min_seg_size_forward', 'Active Mean', 'Active Std', 'Active Max', 'Active Min', 'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min', 'SimillarHTTP', 'Inbound'])
+        df = pd.DataFrame(df, columns=COLUMNS)
     if have_target:
         target_label = df.columns[-1]
-        y = df[target_label].values
+        y = np.array([
+            ATTACK_TYPES[t.split('_')[-1].replace('-', '').lower()]
+            for t in df.iloc[:, -1]
+        ])
         df = df.drop(target_label, axis=1)
-
     # one hot
     # tags = get_tag_columns(df, limit=6)
-    tags = ["Fwd PSH Flags", "Bwd PSH Flags", "Fwd URG Flags", "Bwd URG Flags", "Inbound"]
+    tags = ["Fwd PSH Flags", "Inbound"]
     tags_df = df[tags]
 
     one_hot_df = pd.get_dummies(df[tags], columns=tags)
+    df["Timestamp"] = df["Timestamp"].values.astype("float32")
     # print(len(one_hot_df.columns))
     # print("{} lable columns: {}".format(len(one_hot_df.columns), "| ".join(one_hot_df.columns)))
     # print(one_hot_df.head())
@@ -76,13 +169,12 @@ def normlize_data(df, have_target=True):
     ss = StandardScaler()
     X = np.concatenate([ss.fit_transform(one_hot_df), df.drop(tags, axis=1).values], axis=1)
     if have_target:
-        return X.astype("float32"), y.astype("float32")
+        return X.astype("float32"), y
     else:
         return X.astype("float32")
-     
+
 
 def extract_features(data, has_label=True):
-
     data['SimillarHTTP'] = 0.
     if has_label:
         return data.iloc[:, -80:-1]
@@ -97,40 +189,76 @@ class UserRoundData(object):
         self.attack_types = ATTACK_TYPES
         self._load_data()
 
-    def _get_data(self, fpath):
-        if not fpath.endswith('csv'):
-            return
-
-        print('Load User Data: ', os.path.basename(fpath))
-        data = pd.read_csv(fpath, skipinitialspace=True, low_memory=False)
-        x = extract_features(data)
-        y = np.array([
-            self.attack_types[t.split('_')[-1].replace('-', '').lower()]
-            for t in data.iloc[:, -1]
-        ])
-        # x = x.to_numpy().astype(np.float32)
-        x = normlize_data(x, have_target=False)
-        x[x == np.inf] = 1.
-        x[np.isnan(x)] = 0.
-        return (
-            x,
-            y,
+    def _read_csv(self, fpath):
+        df =  pd.read_csv(
+            fpath,
+            header=0,
+            names=COLUMNS,
+            skiprows=0,
+            skipinitialspace=True,
+            low_memory=False,
+            parse_dates=["Timestamp"]
+        ).fillna(0).replace(
+            [np.inf, -np.inf], 1
         )
+        # remove constant columns
+        df = df.loc[:, (df != df.iloc[0]).any()]
+
+        # remove flow id column
+        df = df.drop(["Flow ID", "SimillarHTTP"], axis=1)
+
+        # deal with ip
+        ip_cols = ["Source IP", "Destination IP"]
+        df[ip_cols]  = df[ip_cols].applymap(lambda x: int(ipaddress.IPv4Address(x)))
+
+        # parse date time
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+        return df
+
+    def _get_raw_df(self):
+        dfs = []
+        n = 0
+        for root, dirs, fnames in os.walk(self.data_dir):
+            for fname in fnames:
+                fpath = os.path.join(root, fname)
+                # each file is for each user
+                # user data can not be shared among users
+                if not fpath.endswith('csv'):
+                    return
+                print('Load User Data: ', os.path.basename(fpath))
+                df = self._read_csv(fpath)
+                dfs.append(df)
+
+                # n += 1
+                # if n > 0:
+                #     break
+        return dfs
+
+    # def _get_data(self, fpath):
+    #     if not fpath.endswith('csv'):
+    #         return
+    #
+    #     print('Load User Data: ', os.path.basename(fpath))
+    #     data = pd.read_csv(fpath, skipinitialspace=True, low_memory=False)
+    #     x = extract_features(data)
+    #     y = np.array([
+    #         self.attack_types[t.split('_')[-1].replace('-', '').lower()]
+    #         for t in data.iloc[:, -1]
+    #     ])
+    #     # x = x.to_numpy().astype(np.float32)
+    #     x = normlize_data(x, have_target=False)
+    #     x[x == np.inf] = 1.
+    #     x[np.isnan(x)] = 0.
+    #     return (
+    #         x,
+    #         y,
+    #     )
 
     def _load_data(self):
         _user_datasets = []
         self._user_datasets = []
-        n = 0
-        for root, dirs, fnames in os.walk(self.data_dir):
-            for fname in fnames:
-                # each file is for each user
-                # user data can not be shared among users
-                data = self._get_data(os.path.join(root, fname))
-                if data is not None:
-                    _user_datasets.append(data)
-                n += 1
-                if n > 20:
-                    break
+        dfs = self._get_raw_df()
+        _user_datasets = [normlize_data(df) for df in dfs]
 
         for x, y in _user_datasets:
             self._user_datasets.append((

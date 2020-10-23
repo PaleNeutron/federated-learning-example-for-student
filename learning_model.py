@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 
 class FLModel(nn.Module):
-    feautre_num = 81
+    feautre_num = 76
     def __init__(self,):
         super().__init__()
         self.fc1 = nn.Linear(self.feautre_num, 256)
