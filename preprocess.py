@@ -202,10 +202,14 @@ class UserRoundData(object):
             [np.inf, -np.inf], 1
         )
         # remove constant columns
-        df = df.loc[:, (df != df.iloc[0]).any()]
+        # df = df.loc[:, (df != df.iloc[0]).any()]
+        # df = df.drop([], axis=1)
 
         # remove flow id column
-        df = df.drop(["Flow ID", "SimillarHTTP"], axis=1)
+        df = df.drop(["Flow ID", "SimillarHTTP", 'Bwd PSH Flags', 'Fwd URG Flags', 'Bwd URG Flags', 'FIN Flag Count',
+       'PSH Flag Count', 'ECE Flag Count', 'Fwd Avg Bytes/Bulk',
+       'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate', 'Bwd Avg Bytes/Bulk',
+       'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate'], axis=1)
 
         # deal with ip
         ip_cols = ["Source IP", "Destination IP"]
