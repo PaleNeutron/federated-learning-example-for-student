@@ -6,8 +6,8 @@ class FLModel(nn.Module):
     feautre_num = 81
     def __init__(self,):
         super().__init__()
-        self.fc1 = nn.Linear(self.feautre_num, 521)
-        self.fc5 = nn.Linear(521, 14)
+        self.fc1 = nn.Linear(self.feautre_num, 256)
+        self.fc5 = nn.Linear(256, 14)
 
     def forward(self, x):
         x = self.fc1(x)
