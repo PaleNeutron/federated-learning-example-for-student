@@ -56,7 +56,7 @@ def test(model, device, test_loader):
             real.extend(target.reshape(-1).tolist())
     test_loss /= len(test_loader.dataset)
 
-    classification_report(real, prediction)
+    print(classification_report(real, prediction))
     # print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
     #     test_loss, correct, len(test_loader.dataset),
     #     100. * correct / len(test_loader.dataset)))
