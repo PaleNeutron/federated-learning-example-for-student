@@ -34,10 +34,10 @@ def user_round_train(X, Y, model, device, debug=False):
         prediction.extend(pred.reshape(-1).tolist())
         real.extend(target.reshape(-1).tolist())
 
-        if batch_idx % 100 == 0:
-            print('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+        # if batch_idx % 100 == 0:
+        #     print('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+        #         batch_idx * len(data), len(train_loader.dataset),
+        #         100. * batch_idx / len(train_loader), loss.item()))
 
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}

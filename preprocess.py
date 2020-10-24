@@ -1,6 +1,5 @@
 import os
 import pickle
-import ipaddress
 
 import numpy as np
 import pandas as pd
@@ -27,95 +26,97 @@ ATTACK_TYPES = {
     'benign': 13,
 }
 
-COLUMNS = ["Index",
-           "No.",
-           "Flow ID",
-           "Source IP",
-           "Source Port",
-           "Destination IP",
-           "Destination Port",
-           "Protocol",
-           "Timestamp",
-           "Flow Duration",
-           "Total Fwd Packets",
-           "Total Backward Packets",
-           "Total Length of Fwd Packets",
-           "Total Length of Bwd Packets",
-           "Fwd Packet Length Max",
-           "Fwd Packet Length Min",
-           "Fwd Packet Length Mean",
-           "Fwd Packet Length Std",
-           "Bwd Packet Length Max",
-           "Bwd Packet Length Min",
-           "Bwd Packet Length Mean",
-           "Bwd Packet Length Std",
-           "Flow Bytes/s",
-           "Flow Packets/s",
-           "Flow IAT Mean",
-           "Flow IAT Std",
-           "Flow IAT Max",
-           "Flow IAT Min",
-           "Fwd IAT Total",
-           "Fwd IAT Mean",
-           "Fwd IAT Std",
-           "Fwd IAT Max",
-           "Fwd IAT Min",
-           "Bwd IAT Total",
-           "Bwd IAT Mean",
-           "Bwd IAT Std",
-           "Bwd IAT Max",
-           "Bwd IAT Min",
-           "Fwd PSH Flags",
-           "Bwd PSH Flags",
-           "Fwd URG Flags",
-           "Bwd URG Flags",
-           "Fwd Header Length",
-           "Bwd Header Length",
-           "Fwd Packets/s",
-           "Bwd Packets/s",
-           "Min Packet Length",
-           "Max Packet Length",
-           "Packet Length Mean",
-           "Packet Length Std",
-           "Packet Length Variance",
-           "FIN Flag Count",
-           "SYN Flag Count",
-           "RST Flag Count",
-           "PSH Flag Count",
-           "ACK Flag Count",
-           "URG Flag Count",
-           "CWE Flag Count",
-           "ECE Flag Count",
-           "Down/Up Ratio",
-           "Average Packet Size",
-           "Avg Fwd Segment Size",
-           "Avg Bwd Segment Size",
-           "Fwd Header Length.1",
-           "Fwd Avg Bytes/Bulk",
-           "Fwd Avg Packets/Bulk",
-           "Fwd Avg Bulk Rate",
-           "Bwd Avg Bytes/Bulk",
-           "Bwd Avg Packets/Bulk",
-           "Bwd Avg Bulk Rate",
-           "Subflow Fwd Packets",
-           "Subflow Fwd Bytes",
-           "Subflow Bwd Packets",
-           "Subflow Bwd Bytes",
-           "Init_Win_bytes_forward",
-           "Init_Win_bytes_backward",
-           "act_data_pkt_fwd",
-           "min_seg_size_forward",
-           "Active Mean",
-           "Active Std",
-           "Active Max",
-           "Active Min",
-           "Idle Mean",
-           "Idle Std",
-           "Idle Max",
-           "Idle Min",
-           "SimillarHTTP",
-           "Inbound",
-           "Label", ]
+COLUMNS = [
+    # "Index",
+    # "No.",
+    # "Flow ID",
+    # "Source IP",
+    # "Source Port",
+    # "Destination IP",
+    # "Destination Port",
+    # "Protocol",
+    # "Timestamp",
+    "Flow Duration",
+    "Total Fwd Packets",
+    "Total Backward Packets",
+    "Total Length of Fwd Packets",
+    "Total Length of Bwd Packets",
+    "Fwd Packet Length Max",
+    "Fwd Packet Length Min",
+    "Fwd Packet Length Mean",
+    "Fwd Packet Length Std",
+    "Bwd Packet Length Max",
+    "Bwd Packet Length Min",
+    "Bwd Packet Length Mean",
+    "Bwd Packet Length Std",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Flow IAT Max",
+    "Flow IAT Min",
+    "Fwd IAT Total",
+    "Fwd IAT Mean",
+    "Fwd IAT Std",
+    "Fwd IAT Max",
+    "Fwd IAT Min",
+    "Bwd IAT Total",
+    "Bwd IAT Mean",
+    "Bwd IAT Std",
+    "Bwd IAT Max",
+    "Bwd IAT Min",
+    "Fwd PSH Flags",
+    "Bwd PSH Flags",
+    "Fwd URG Flags",
+    "Bwd URG Flags",
+    "Fwd Header Length",
+    "Bwd Header Length",
+    "Fwd Packets/s",
+    "Bwd Packets/s",
+    "Min Packet Length",
+    "Max Packet Length",
+    "Packet Length Mean",
+    "Packet Length Std",
+    "Packet Length Variance",
+    "FIN Flag Count",
+    "SYN Flag Count",
+    "RST Flag Count",
+    "PSH Flag Count",
+    "ACK Flag Count",
+    "URG Flag Count",
+    "CWE Flag Count",
+    "ECE Flag Count",
+    "Down/Up Ratio",
+    "Average Packet Size",
+    "Avg Fwd Segment Size",
+    "Avg Bwd Segment Size",
+    "Fwd Header Length.1",
+    "Fwd Avg Bytes/Bulk",
+    "Fwd Avg Packets/Bulk",
+    "Fwd Avg Bulk Rate",
+    "Bwd Avg Bytes/Bulk",
+    "Bwd Avg Packets/Bulk",
+    "Bwd Avg Bulk Rate",
+    "Subflow Fwd Packets",
+    "Subflow Fwd Bytes",
+    "Subflow Bwd Packets",
+    "Subflow Bwd Bytes",
+    "Init_Win_bytes_forward",
+    "Init_Win_bytes_backward",
+    "act_data_pkt_fwd",
+    "min_seg_size_forward",
+    "Active Mean",
+    "Active Std",
+    "Active Max",
+    "Active Min",
+    "Idle Mean",
+    "Idle Std",
+    "Idle Max",
+    "Idle Min",
+    "SimillarHTTP",
+    "Inbound",
+    # "Label",
+]
 
 
 class CompDataset(object):
@@ -145,24 +146,37 @@ def get_tag_columns(df, limit=10, force_int=True):
 
 
 def normlize_data(df, have_target=True):
-    if not have_target:
-        cols = COLUMNS[:-1]
     if type(df) == np.ndarray:
+        cols = COLUMNS[:-1]
         df = pd.DataFrame(df, columns=cols)
-    if have_target:
-        target_label = df.columns[-1]
+        df = df.iloc[:, -79:]
+    else:
+        cols = COLUMNS
+        df = df.iloc[:, -80:]
         y = np.array([
             ATTACK_TYPES[t.split('_')[-1].replace('-', '').lower()]
             for t in df.iloc[:, -1]
         ])
-        df = df.drop(target_label, axis=1)
+        df = df.iloc[:, :-1]
+
+    df.columns = cols
+
+    df = df.drop(["SimillarHTTP", 'Bwd PSH Flags', 'Fwd URG Flags', 'Bwd URG Flags', 'FIN Flag Count',
+                  'PSH Flag Count', 'ECE Flag Count', 'Fwd Avg Bytes/Bulk',
+                  'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate', 'Bwd Avg Bytes/Bulk',
+                  'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate'], axis=1)
+
+    # # deal with ip
+    # ip_cols = ["Source IP", "Destination IP"]
+    # df[ip_cols] = df[ip_cols].applymap(lambda x: int(ipaddress.IPv4Address(x)))
+
     # one hot
     # tags = get_tag_columns(df, limit=6)
     tags = ["Fwd PSH Flags", "Inbound"]
     tags_df = df[tags]
 
     one_hot_df = pd.get_dummies(df[tags], columns=tags)
-    df["Timestamp"] = df["Timestamp"].values.astype("float32")
+    # df["Timestamp"] = df["Timestamp"].values.astype("float32")
     # print(len(one_hot_df.columns))
     # print("{} lable columns: {}".format(len(one_hot_df.columns), "| ".join(one_hot_df.columns)))
     # print(one_hot_df.head())
@@ -192,33 +206,16 @@ class UserRoundData(object):
         self._load_data()
 
     def _read_csv(self, fpath):
-        df =  pd.read_csv(
+        df = pd.read_csv(
             fpath,
-            header=0,
-            names=COLUMNS,
-            skiprows=0,
+            # header=0,
+            # names=COLUMNS,
+            # skiprows=0,
             skipinitialspace=True,
             low_memory=False,
-            parse_dates=["Timestamp"]
         ).fillna(0).replace(
             [np.inf, -np.inf], 1
         )
-        # remove constant columns
-        # df = df.loc[:, (df != df.iloc[0]).any()]
-        # df = df.drop([], axis=1)
-
-        # remove flow id column
-        df = df.drop(["Flow ID", "SimillarHTTP", 'Bwd PSH Flags', 'Fwd URG Flags', 'Bwd URG Flags', 'FIN Flag Count',
-       'PSH Flag Count', 'ECE Flag Count', 'Fwd Avg Bytes/Bulk',
-       'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate', 'Bwd Avg Bytes/Bulk',
-       'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate'], axis=1)
-
-        # deal with ip
-        ip_cols = ["Source IP", "Destination IP"]
-        df[ip_cols]  = df[ip_cols].applymap(lambda x: int(ipaddress.IPv4Address(x)))
-
-        # parse date time
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
         return df
 
     def _get_raw_df(self):
@@ -235,9 +232,9 @@ class UserRoundData(object):
                 df = self._read_csv(fpath)
                 dfs.append(df)
 
-                # n += 1
-                # if n > 0:
-                #     break
+                n += 1
+                if n > 4:
+                    break
         return dfs
 
     # def _get_data(self, fpath):

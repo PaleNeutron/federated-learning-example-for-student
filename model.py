@@ -78,7 +78,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.lr = 0.001
         self.n_max_rounds = 10000
         self.log_interval = 10
-        self.n_round_samples = 30000
+        self.n_round_samples = 50000
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
 
