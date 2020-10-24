@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import TensorDataset
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, classification_report
 from io import StringIO
 
 
@@ -43,6 +43,8 @@ def test(model, device, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
+    prediction = []
+    real = []
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
@@ -50,12 +52,14 @@ def test(model, device, test_loader):
             test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
-
+            prediction.extend(pred.reshape(-1).tolist())
+            real.extend(target.reshape(-1).tolist())
     test_loss /= len(test_loader.dataset)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+    classification_report(real, prediction)
+    # print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    #     test_loss, correct, len(test_loader.dataset),
+    #     100. * correct / len(test_loader.dataset)))
 
 
 def main():
