@@ -147,11 +147,9 @@ def get_tag_columns(df, limit=10, force_int=True):
 
 def normlize_data(df, have_target=True):
     if type(df) == np.ndarray:
-        cols = COLUMNS[:-1]
-        df = pd.DataFrame(df, columns=cols)
+        df = pd.DataFrame(df)
         df = df.iloc[:, -79:]
     else:
-        cols = COLUMNS
         df = df.iloc[:, -80:]
         y = np.array([
             ATTACK_TYPES[t.split('_')[-1].replace('-', '').lower()]
@@ -159,7 +157,7 @@ def normlize_data(df, have_target=True):
         ])
         df = df.iloc[:, :-1]
 
-    df.columns = cols
+    df.columns = COLUMNS
 
     df = df.drop(["SimillarHTTP", 'Bwd PSH Flags', 'Fwd URG Flags', 'Bwd URG Flags', 'FIN Flag Count',
                   'PSH Flag Count', 'ECE Flag Count', 'Fwd Avg Bytes/Bulk',
@@ -232,9 +230,9 @@ class UserRoundData(object):
                 df = self._read_csv(fpath)
                 dfs.append(df)
 
-                n += 1
-                if n > 4:
-                    break
+                # n += 1
+                # if n > 4:
+                #     break
         return dfs
 
     # def _get_data(self, fpath):
@@ -327,6 +325,7 @@ def get_test_loader(batch_size=1000):
     with open(TESTDATA_PATH, 'rb') as fin:
         data = pickle.load(fin)
 
+    print("nmb的不给test文件的shape:", data['X'].shape)
     test_loader = torch.utils.data.DataLoader(
         normlize_data(data['X'], have_target=False),
         batch_size=batch_size,
