@@ -145,8 +145,10 @@ def get_tag_columns(df, limit=10, force_int=True):
 
 
 def normlize_data(df, have_target=True):
+    if not have_target:
+        cols = COLUMNS[:-1]
     if type(df) == np.ndarray:
-        df = pd.DataFrame(df, columns=COLUMNS)
+        df = pd.DataFrame(df, columns=cols)
     if have_target:
         target_label = df.columns[-1]
         y = np.array([
