@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from preprocess import CompDataset
 
 
-def user_round_train(X, Y, model, device, debug=False):
+def user_round_train(X, Y, model, device, debug=False, client_name=""):
     data = CompDataset(X=X, Y=Y)
     train_loader = torch.utils.data.DataLoader(
         data,
@@ -46,9 +46,9 @@ def user_round_train(X, Y, model, device, debug=False):
         grads['named_grads'][name] = param.grad.detach().cpu().numpy() * correct_rate
 
     if debug:
-        print('Training Loss: {:<10.2f}, accuracy: {:<8.2f}'.format(
-            total_loss, 100. * correct_rate))
+        print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
+            total_loss, 100. * correct_rate, " ".join(["{:>2}".format(str(i)) for i in set(real)])))
 
     # better result return larger grad
 
-    return grads
+    return correct_rate, grads

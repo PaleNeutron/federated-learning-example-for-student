@@ -171,7 +171,6 @@ def normlize_data(df, have_target=True):
     # one hot
     # tags = get_tag_columns(df, limit=6)
     tags = ["Fwd PSH Flags", "Inbound"]
-    tags_df = df[tags]
 
     one_hot_df = pd.get_dummies(df[tags], columns=tags)
     # df["Timestamp"] = df["Timestamp"].values.astype("float32")
@@ -181,7 +180,7 @@ def normlize_data(df, have_target=True):
 
     # Standard
     ss = StandardScaler()
-    X = np.concatenate([one_hot_df, ss.fit_transform(df.drop(tags, axis=1).values)], axis=1)
+    X = np.concatenate([one_hot_df.values, ss.fit_transform(df.drop(tags, axis=1).values)], axis=1)
     if have_target:
         return X.astype("float32"), y
     else:
@@ -201,6 +200,7 @@ class UserRoundData(object):
         self.data_dir = TRAINDATA_DIR
         self._user_datasets = []
         self.attack_types = ATTACK_TYPES
+        self.user_names = {}
         self._load_data()
 
     def _read_csv(self, fpath):
@@ -229,8 +229,8 @@ class UserRoundData(object):
                 print('Load User Data: ', os.path.basename(fpath))
                 df = self._read_csv(fpath)
                 dfs.append(df)
-
-                # n += 1
+                self.user_names[n] = fname
+                n += 1
                 # if n > 4:
                 #     break
         return dfs
@@ -285,6 +285,9 @@ class UserRoundData(object):
             return self._user_datasets[user_idx]
 
         n_samples = len(self._user_datasets[user_idx][1])
+
+        # 平衡samples, WeightedRandomSampler
+
         choices = np.random.choice(n_samples, min(n_samples, n_round_samples))
 
         return self._user_datasets[user_idx][0][choices], self._user_datasets[

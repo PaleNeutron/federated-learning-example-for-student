@@ -1,18 +1,18 @@
-from datetime import datetime
 import os
 import shutil
 import unittest
+from datetime import datetime
 
 import numpy as np
-from sklearn.metrics import classification_report
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import classification_report
 
 from context import FederatedAveragingGrads
 from context import PytorchModel
 from learning_model import FLModel
-from preprocess import get_test_loader
 from preprocess import UserRoundData
+from preprocess import get_test_loader
 from train import user_round_train
 
 
@@ -76,7 +76,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.batch_size = 64
         self.test_batch_size = 1000
         self.lr = 0.001
-        self.n_max_rounds = 10000
+        self.n_max_rounds = 30
         self.log_interval = 10
         self.n_round_samples = 50000
         self.testbase = self.TEST_BASE_DIR
@@ -123,7 +123,8 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                     user_idx=u,
                     n_round=r,
                     n_round_samples=self.n_round_samples)
-                grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True)
+                accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True,
+                                                   client_name=self.urd.user_names[u])
                 self.ps.receive_grads_info(grads=grads)
 
             self.ps.aggregate()
@@ -144,7 +145,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
             self.save_testdata_prediction(model=model, device=device)
 
     def save_prediction(self, predition):
-        if isinstance(predition, (np.ndarray, )):
+        if isinstance(predition, (np.ndarray,)):
             predition = predition.reshape(-1).tolist()
 
         with open(os.path.join(self.RESULT_DIR, 'result.txt'), 'w') as fout:

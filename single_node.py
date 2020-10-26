@@ -1,4 +1,4 @@
-from learning_model import FLModel
+from learning_model import FLModel, MLP
 from preprocess import *
 
 
