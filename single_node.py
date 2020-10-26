@@ -21,6 +21,7 @@ from io import StringIO
 
 
 Net = FLModel
+# Net = MLP
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()

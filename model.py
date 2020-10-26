@@ -76,9 +76,9 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.batch_size = 64
         self.test_batch_size = 1000
         self.lr = 0.001
-        self.n_max_rounds = 30
+        self.n_max_rounds = 1000
         self.log_interval = 10
-        self.n_round_samples = 50000
+        self.n_round_samples = -1
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
 
@@ -188,7 +188,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         print(classification_report(real, prediction))
         print(
             '{} set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-                prefix, test_loss, correct, len(test_loader.dataset), acc), )
+                prefix, test_loss, acc, len(test_loader.dataset), acc), )
 
 
 def suite():

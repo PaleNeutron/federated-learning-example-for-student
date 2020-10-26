@@ -1,15 +1,23 @@
 import torch
 import torch.nn.functional as F
+import numpy as np
+from torch.utils.data import WeightedRandomSampler
 
-from preprocess import CompDataset
+from preprocess import CompDataset, ATTACK_TYPES
 
 
 def user_round_train(X, Y, model, device, debug=False, client_name=""):
     data = CompDataset(X=X, Y=Y)
+    unique, counts = np.unique(Y, return_counts=True)
+    target_weights = {i: 1/ c for i, c in zip(unique, counts)}
+    weights = [target_weights[i] for i in Y]
+    sample_size = 100000
+    sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
     train_loader = torch.utils.data.DataLoader(
         data,
-        batch_size=320,
-        shuffle=True,
+        batch_size=3200,
+        # shuffle=True,
+        sampler=sampler,
     )
 
     model.train()
@@ -41,9 +49,9 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
 
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
-    correct_rate = correct / len(train_loader.dataset)
+    correct_rate = correct / sample_size
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * correct_rate
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
 
     if debug:
         print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
