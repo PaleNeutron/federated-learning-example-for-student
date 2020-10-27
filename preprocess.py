@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import torch.utils.data
 from sklearn.preprocessing._data import StandardScaler
+from torch.utils.data import WeightedRandomSampler
 
 TRAINDATA_DIR = './train/'
 TESTDATA_PATH = './test/testing-X.pkl'
@@ -221,8 +222,8 @@ class UserRoundData(object):
         n = 0
         for root, dirs, fnames in os.walk(self.data_dir):
             for fname in fnames:
-                # if fname != "type-total-8-150000-samples.csv":
-                #     continue
+                if fname != "type-total-8-150000-samples.csv":
+                    continue
                 fpath = os.path.join(root, fname)
                 # each file is for each user
                 # user data can not be shared among users
@@ -310,15 +311,30 @@ class UserRoundData(object):
 
         data = CompDataset(X=np.concatenate(X), Y=np.concatenate(Y))
         # balance
-        # batch_size = 20
-        # class_sample_count = [10, 1, 20, 3, 4] # dataset has 10 class-1 samples, 1 class-2 samples, etc.
-        # weights = 1 / torch.Tensor(class_sample_count)
-        # sampler = torch.utils.data.sampler.WeightedRandomSampler(weights, batch_size)
-        # trainloader = data_utils.DataLoader(train_dataset, batch_size = batch_size, shuffle=True, sampler = sampler)
+        target_weights = {
+            13: 11.1,
+            12: 11.69,
+            11: 11.69,
+            10: 7.78,
+            9: 0.36,
+            8: 5.84,
+            7: 5.84,
+            6: 10.59,
+            5: 0,
+            4: 5.84,
+            3: 5.84,
+            2: 11.69,
+            1: 5.84,
+            0: 5.84
+        }
+        weights = [target_weights[i] for i in data.Y]
+        sample_size = 20000
+        sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
         train_loader = torch.utils.data.DataLoader(
             data,
             batch_size=min(batch_size, n_samples),
-            shuffle=True,
+            # shuffle=True,
+            sampler=sampler
         )
 
         return train_loader
