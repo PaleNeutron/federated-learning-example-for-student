@@ -75,7 +75,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.use_cuda = True
         self.batch_size = 64
         self.test_batch_size = 1000
-        self.lr = 0.001
+        self.lr = 0.01
         self.n_max_rounds = 1000
         self.log_interval = 10
         self.n_round_samples = -1
@@ -176,19 +176,24 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                 test_loss += F.nll_loss(
                     output, target,
                     reduction='sum').item()  # sum up batch loss
+
+                # label 1 is lost in training data, assume it should be here
+                output[:, 1] = torch.mean(output, 1) + 1
+
                 pred = output.argmax(
                     dim=1,
                     keepdim=True)  # get the index of the max log-probability
+
                 correct += pred.eq(target.view_as(pred)).sum().item()
                 prediction.extend(pred.reshape(-1).tolist())
                 real.extend(target.reshape(-1).tolist())
 
         test_loss /= len(test_loader.dataset)
-        acc = 100. * correct / len(test_loader.dataset)
+        acc = 100. * correct / len(real)
         print(classification_report(real, prediction))
         print(
             '{} set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-                prefix, test_loss, acc, len(test_loader.dataset), acc), )
+                prefix, test_loss, correct, len(real), acc), )
 
 
 def suite():

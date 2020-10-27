@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
-
+# todo remove label 1 and label 5
 class FLModel(nn.Module):
     dim_in, dim_hidden, dim_out = 68, 32, 14
     def __init__(self,):
