@@ -50,7 +50,11 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
     correct_rate = correct / len(real)
-    accelerate_rate = 1 + (0.8 - correct_rate) * 2
+    if correct_rate > 0.9:
+        accelerate_rate = 1 + (1 - correct_rate) * 8
+    else:
+        accelerate_rate = 1 + (1 - correct_rate) * 2
+
     for name, param in model.named_parameters():
         grads['named_grads'][name] = param.grad.detach().cpu().numpy() * accelerate_rate
 

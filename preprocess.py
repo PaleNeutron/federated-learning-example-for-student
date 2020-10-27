@@ -222,8 +222,8 @@ class UserRoundData(object):
         n = 0
         for root, dirs, fnames in os.walk(self.data_dir):
             for fname in fnames:
-                if fname != "type-total-8-150000-samples.csv":
-                    continue
+                # if fname != "type-total-8-150000-samples.csv":
+                #     continue
                 fpath = os.path.join(root, fname)
                 # each file is for each user
                 # user data can not be shared among users
