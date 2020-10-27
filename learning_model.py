@@ -3,11 +3,11 @@ import torch.nn.functional as F
 
 
 class FLModel(nn.Module):
-    feautre_num = 68
+    dim_in, dim_hidden, dim_out = 68, 32, 14
     def __init__(self,):
         super().__init__()
-        self.fc1 = nn.Linear(self.feautre_num, 256)
-        self.fc5 = nn.Linear(256, 14)
+        self.fc1 = nn.Linear(self.dim_in, self.dim_hidden)
+        self.fc5 = nn.Linear(self.dim_hidden, self.dim_out)
 
     def forward(self, x):
         x = self.fc1(x)
