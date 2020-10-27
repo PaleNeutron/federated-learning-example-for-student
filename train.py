@@ -51,7 +51,7 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
     correct_rate = correct / sample_size
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * len(set(real)) / 10
 
     if debug:
         print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
