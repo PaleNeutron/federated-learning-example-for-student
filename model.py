@@ -88,8 +88,8 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.init_model_path = os.path.join(self.testworkdir, 'init_model.md')
         torch.manual_seed(self.seed)
 
-        if not os.path.exists(self.init_model_path):
-            torch.save(FLModel().state_dict(), self.init_model_path)
+        # if not os.path.exists(self.init_model_path):
+        torch.save(FLModel().state_dict(), self.init_model_path)
 
         self.ps = ParameterServer(init_model_path=self.init_model_path,
                                   testworkdir=self.testworkdir)
