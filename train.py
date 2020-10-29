@@ -1,15 +1,23 @@
 import torch
 import torch.nn.functional as F
+import numpy as np
+from torch.utils.data import WeightedRandomSampler
 
-from preprocess import CompDataset
+from preprocess import CompDataset, ATTACK_TYPES
 
 
-def user_round_train(X, Y, model, device, debug=False):
+def user_round_train(X, Y, model, device, debug=False, client_name=""):
     data = CompDataset(X=X, Y=Y)
+    unique, counts = np.unique(Y, return_counts=True)
+    target_weights = {i: 1/ c for i, c in zip(unique, counts)}
+    weights = [target_weights[i] for i in Y]
+    sample_size = 100000
+    sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
     train_loader = torch.utils.data.DataLoader(
         data,
-        batch_size=320,
+        batch_size=3200,
         shuffle=True,
+        # sampler=sampler,
     )
 
     model.train()
@@ -41,14 +49,19 @@ def user_round_train(X, Y, model, device, debug=False):
 
 
     grads = {'n_samples': data.shape[0], 'named_grads': {}}
-    correct_rate = correct / len(train_loader.dataset)
+    correct_rate = correct / len(real)
+    if correct_rate > 0.9:
+        accelerate_rate = 1 + (1 - correct_rate) * 8
+    else:
+        accelerate_rate = 1 + (1 - correct_rate) * 2
+
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * correct_rate
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
 
     if debug:
-        print('Training Loss: {:<10.2f}, accuracy: {:<8.2f}'.format(
-            total_loss, 100. * correct_rate))
+        print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
+            total_loss, 100. * correct_rate, " ".join(["{:>2}".format(str(i)) for i in set(real)])))
 
     # better result return larger grad
 
-    return grads
+    return correct_rate, grads

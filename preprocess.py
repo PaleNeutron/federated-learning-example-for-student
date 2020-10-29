@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import torch.utils.data
 from sklearn.preprocessing._data import StandardScaler
+from torch.utils.data import WeightedRandomSampler
 
 TRAINDATA_DIR = './train/'
 TESTDATA_PATH = './test/testing-X.pkl'
@@ -171,7 +172,6 @@ def normlize_data(df, have_target=True):
     # one hot
     # tags = get_tag_columns(df, limit=6)
     tags = ["Fwd PSH Flags", "Inbound"]
-    tags_df = df[tags]
 
     one_hot_df = pd.get_dummies(df[tags], columns=tags)
     # df["Timestamp"] = df["Timestamp"].values.astype("float32")
@@ -181,7 +181,7 @@ def normlize_data(df, have_target=True):
 
     # Standard
     ss = StandardScaler()
-    X = np.concatenate([one_hot_df, ss.fit_transform(df.drop(tags, axis=1).values)], axis=1)
+    X = np.concatenate([one_hot_df.values, ss.fit_transform(df.drop(tags, axis=1).values)], axis=1)
     if have_target:
         return X.astype("float32"), y
     else:
@@ -201,6 +201,7 @@ class UserRoundData(object):
         self.data_dir = TRAINDATA_DIR
         self._user_datasets = []
         self.attack_types = ATTACK_TYPES
+        self.user_names = {}
         self._load_data()
 
     def _read_csv(self, fpath):
@@ -221,6 +222,8 @@ class UserRoundData(object):
         n = 0
         for root, dirs, fnames in os.walk(self.data_dir):
             for fname in fnames:
+                if fname != "type-total-8-150000-samples.csv":
+                    continue
                 fpath = os.path.join(root, fname)
                 # each file is for each user
                 # user data can not be shared among users
@@ -229,8 +232,8 @@ class UserRoundData(object):
                 print('Load User Data: ', os.path.basename(fpath))
                 df = self._read_csv(fpath)
                 dfs.append(df)
-
-                # n += 1
+                self.user_names[n] = fname
+                n += 1
                 # if n > 4:
                 #     break
         return dfs
@@ -285,6 +288,7 @@ class UserRoundData(object):
             return self._user_datasets[user_idx]
 
         n_samples = len(self._user_datasets[user_idx][1])
+
         choices = np.random.choice(n_samples, min(n_samples, n_round_samples))
 
         return self._user_datasets[user_idx][0][choices], self._user_datasets[
@@ -305,15 +309,30 @@ class UserRoundData(object):
 
         data = CompDataset(X=np.concatenate(X), Y=np.concatenate(Y))
         # balance
-        # batch_size = 20
-        # class_sample_count = [10, 1, 20, 3, 4] # dataset has 10 class-1 samples, 1 class-2 samples, etc.
-        # weights = 1 / torch.Tensor(class_sample_count)
-        # sampler = torch.utils.data.sampler.WeightedRandomSampler(weights, batch_size)
-        # trainloader = data_utils.DataLoader(train_dataset, batch_size = batch_size, shuffle=True, sampler = sampler)
+        target_weights = {
+            13: 11.1,
+            12: 11.69,
+            11: 11.69,
+            10: 7.78,
+            9: 0.36,
+            8: 5.84,
+            7: 5.84,
+            6: 10.59,
+            5: 0,
+            4: 5.84,
+            3: 5.84,
+            2: 11.69,
+            1: 5.84,
+            0: 5.84
+        }
+        weights = [target_weights[i] for i in data.Y]
+        # sample_size = 50000
+        sampler = WeightedRandomSampler(weights, num_samples=batch_size, replacement=True)
         train_loader = torch.utils.data.DataLoader(
             data,
             batch_size=min(batch_size, n_samples),
-            shuffle=True,
+            # shuffle=True,
+            sampler=sampler
         )
 
         return train_loader

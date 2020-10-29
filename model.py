@@ -1,18 +1,18 @@
-from datetime import datetime
 import os
 import shutil
 import unittest
+from datetime import datetime
 
 import numpy as np
-from sklearn.metrics import classification_report
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import classification_report
 
 from context import FederatedAveragingGrads
 from context import PytorchModel
 from learning_model import FLModel
-from preprocess import get_test_loader
 from preprocess import UserRoundData
+from preprocess import get_test_loader
 from train import user_round_train
 
 
@@ -67,7 +67,7 @@ class ParameterServer(object):
 
 class FedAveragingGradsTestSuit(unittest.TestCase):
     RESULT_DIR = 'result'
-    N_VALIDATION = 10000
+    N_VALIDATION = 100000
     TEST_BASE_DIR = '/tmp/'
 
     def setUp(self):
@@ -75,10 +75,10 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.use_cuda = True
         self.batch_size = 64
         self.test_batch_size = 1000
-        self.lr = 0.001
-        self.n_max_rounds = 10000
+        self.lr = 0.01
+        self.n_max_rounds = 1000
         self.log_interval = 10
-        self.n_round_samples = 50000
+        self.n_round_samples = 100000
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
 
@@ -123,7 +123,8 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                     user_idx=u,
                     n_round=r,
                     n_round_samples=self.n_round_samples)
-                grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True)
+                accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True,
+                                                   client_name=self.urd.user_names[u])
                 self.ps.receive_grads_info(grads=grads)
 
             self.ps.aggregate()
@@ -144,7 +145,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
             self.save_testdata_prediction(model=model, device=device)
 
     def save_prediction(self, predition):
-        if isinstance(predition, (np.ndarray, )):
+        if isinstance(predition, (np.ndarray,)):
             predition = predition.reshape(-1).tolist()
 
         with open(os.path.join(self.RESULT_DIR, 'result.txt'), 'w') as fout:
@@ -155,11 +156,22 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         if not loader:
             return
         prediction = []
+        confidence = []
         with torch.no_grad():
             for data in loader:
-                pred = model(data.to(device)).argmax(dim=1, keepdim=True)
+                output = model(data.to(device))
+                pred =output.argmax(dim=1, keepdim=True)
+                # label 1 is lost in training data, assume it should be here
+                confidence.extend(output.max(dim=1,)[0].reshape(-1).tolist())
                 prediction.extend(pred.reshape(-1).tolist())
 
+        # # label 1 threshold
+        threshold = sorted(confidence)[int(len(loader.dataset) * 5.84 / 100 / 3)]
+        for i in range(len(confidence)):
+            if confidence[i] < threshold:
+                prediction[i] = 1
+
+        print("{}/{} label 1 is predicted".format(prediction.count(1), len(prediction)))
         self.save_prediction(prediction)
 
     def predict(self, model, device, test_loader, prefix=""):
@@ -168,6 +180,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         correct = 0
         prediction = []
         real = []
+        confidence = []
         with torch.no_grad():
             for data, target in test_loader:
                 data, target = data.to(device), target.to(device)
@@ -178,16 +191,17 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                 pred = output.argmax(
                     dim=1,
                     keepdim=True)  # get the index of the max log-probability
+
                 correct += pred.eq(target.view_as(pred)).sum().item()
                 prediction.extend(pred.reshape(-1).tolist())
                 real.extend(target.reshape(-1).tolist())
 
         test_loss /= len(test_loader.dataset)
-        acc = 100. * correct / len(test_loader.dataset)
+        acc = 100. * correct / len(real)
         print(classification_report(real, prediction))
         print(
             '{} set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-                prefix, test_loss, correct, len(test_loader.dataset), acc), )
+                prefix, test_loss, correct, len(real), acc), )
 
 
 def suite():

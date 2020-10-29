@@ -1,4 +1,4 @@
-from learning_model import FLModel
+from learning_model import FLModel, MLP
 from preprocess import *
 
 
@@ -21,6 +21,7 @@ from io import StringIO
 
 
 Net = FLModel
+# Net = MLP
 
 def train(model, device, train_loader, optimizer, epoch):
     model.train()
@@ -139,13 +140,14 @@ def run(epochs=500, lr=0.01, batch_size=1024, test_batch_size=1024, use_cuda=Tru
     
     
     model = Net().to(device)
-    optimizer = optim.Adadelta(model.parameters(), lr=lr)
 
-    scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
-    for epoch in range(1, epochs + 1):
-        train(model, device, train_loader, optimizer, epoch)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    # scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+    for epoch in range(1, args.epochs + 1):
+        train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
-        scheduler.step()
+        # scheduler.step()
 
     if save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
