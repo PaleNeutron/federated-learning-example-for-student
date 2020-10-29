@@ -17,7 +17,7 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
         torch.utils.data.TensorDataset(
             X, Y
         ),
-        batch_size=len(Y),
+        batch_size=320,
         shuffle=True,
         # sampler=sampler,
     )
@@ -58,7 +58,7 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
         accelerate_rate = 1 + (1 - correct_rate) * 2
 
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * accelerate_rate
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
 
     if debug:
         print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
@@ -66,4 +66,4 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
 
     # better result return larger grad
 
-    return correct_rate, grads
+    return total_loss, correct_rate, grads

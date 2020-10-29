@@ -75,9 +75,9 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.use_cuda = True
         self.batch_size = 64
         self.test_batch_size = 1000
-        self.lr = 0.01
+        self.lr = 0.001
         self.n_max_rounds = 10000
-        self.log_interval = 10
+        self.log_interval = 100
         self.n_round_samples = 1600
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
@@ -113,6 +113,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         training_start = datetime.now()
         model = None
         self.urd.prepare_data_loader(self.n_round_samples)
+        total_loss = 0
         for r in range(1, self.n_max_rounds + 1):
             start = datetime.now()
             for u in range(0, self.n_users):
@@ -124,18 +125,22 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                     user_idx=u,
                     n_round=r,
                     n_round_samples=self.n_round_samples)
-                accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=False,
+                loss, accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=False,
                                                    client_name=self.urd.user_names[u])
+                total_loss += loss
                 self.ps.receive_grads_info(grads=grads)
 
             self.ps.aggregate()
-            print('\nRound {} cost: {}, total training cost: {}'.format(
-                r,
-                datetime.now() - start,
-                datetime.now() - training_start,
-            ))
 
-            if model is not None and r % 100 == 0:
+            if model is not None and r % self.log_interval == 0:
+
+                print('\nRound {} cost: {}, total training cost: {}, avg loss: {}'.format(
+                    r,
+                    datetime.now() - start,
+                    datetime.now() - training_start,
+                    total_loss / self.log_interval
+                ))
+                total_loss = 0
                 self.predict(model,
                              device,
                              self.urd.uniform_random_loader(self.N_VALIDATION),

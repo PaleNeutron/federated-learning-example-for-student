@@ -111,7 +111,7 @@ def main():
 
 
         
-def run(epochs=500, lr=0.01, batch_size=1000, test_batch_size=1024, use_cuda=True, gamma=0.99, save_model=False):
+def run(epochs=500, lr=0.001, batch_size=1000, test_batch_size=1024, use_cuda=True, gamma=0.99, save_model=False):
     train_kwargs = {'batch_size': batch_size}
     test_kwargs = {'batch_size': test_batch_size}
     if use_cuda and torch.cuda.is_available():
