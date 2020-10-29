@@ -123,7 +123,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                     user_idx=u,
                     n_round=r,
                     n_round_samples=self.n_round_samples)
-                accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=True,
+                accuracy, grads = user_round_train(X=x, Y=y, model=model, device=device, debug=False,
                                                    client_name=self.urd.user_names[u])
                 self.ps.receive_grads_info(grads=grads)
 
@@ -134,7 +134,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                 datetime.now() - training_start,
             ))
 
-            if model is not None and r % 10 == 0:
+            if model is not None and r % 1000 == 0:
                 self.predict(model,
                              device,
                              self.urd.uniform_random_loader(self.N_VALIDATION),
