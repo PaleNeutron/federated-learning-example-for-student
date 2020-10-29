@@ -32,7 +32,7 @@ def train(model, device, train_loader, optimizer, epoch):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % (len(train_loader.dataset) /len(data) // 10) == 0:
+        if batch_idx % (len(train_loader.dataset) /len(data) // 10 + 1) == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, (batch_idx + 1) * len(data), len(train_loader.dataset),
                 100. * (batch_idx + 1) / len(train_loader), loss.item()))
@@ -111,7 +111,7 @@ def main():
 
 
         
-def run(epochs=500, lr=0.01, batch_size=1024, test_batch_size=1024, use_cuda=True, gamma=0.99, save_model=False):
+def run(epochs=500, lr=0.01, batch_size=1000, test_batch_size=1024, use_cuda=True, gamma=0.99, save_model=False):
     train_kwargs = {'batch_size': batch_size}
     test_kwargs = {'batch_size': test_batch_size}
     if use_cuda and torch.cuda.is_available():
@@ -131,7 +131,6 @@ def run(epochs=500, lr=0.01, batch_size=1024, test_batch_size=1024, use_cuda=Tru
                                                         y,
                                                         test_size=0.3,
                                                         random_state=66)
-
     
     train_loader = torch.utils.data.DataLoader(
         TensorDataset(torch.tensor(X_train), torch.tensor(y_train)),
@@ -156,4 +155,4 @@ def run(epochs=500, lr=0.01, batch_size=1024, test_batch_size=1024, use_cuda=Tru
         
         
 if __name__ == '__main__':
-    main()
+    run()

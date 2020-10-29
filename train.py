@@ -15,7 +15,7 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
     sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
     train_loader = torch.utils.data.DataLoader(
         data,
-        batch_size=3200,
+        batch_size=400,
         shuffle=True,
         # sampler=sampler,
     )
@@ -56,7 +56,7 @@ def user_round_train(X, Y, model, device, debug=False, client_name=""):
         accelerate_rate = 1 + (1 - correct_rate) * 2
 
     for name, param in model.named_parameters():
-        grads['named_grads'][name] = param.grad.detach().cpu().numpy()
+        grads['named_grads'][name] = param.grad.detach().cpu().numpy() * accelerate_rate
 
     if debug:
         print('client: {:<32}  Training Loss: {:<10.2f}  accuracy: {:<8.2f} on tags: {}'.format(client_name,
