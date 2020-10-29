@@ -1,5 +1,6 @@
 import os
 import pickle
+from itertools import repeat
 
 import numpy as np
 import pandas as pd
@@ -120,6 +121,12 @@ COLUMNS = [
 ]
 
 
+def repeater(data_loader):
+    for loader in repeat(data_loader):
+        for data in loader:
+            yield data
+
+
 class CompDataset(object):
     def __init__(self, X, Y):
         self.X = X
@@ -200,6 +207,7 @@ class UserRoundData(object):
     def __init__(self):
         self.data_dir = TRAINDATA_DIR
         self._user_datasets = []
+        self._user_dataloader = []
         self.attack_types = ATTACK_TYPES
         self.user_names = {}
         self._load_data()
@@ -216,6 +224,18 @@ class UserRoundData(object):
             [np.inf, -np.inf], 1
         )
         return df
+
+    def prepare_data_loader(self, batch_size):
+        for i in range(len(self._user_datasets)):
+            self._user_dataloader.append(
+                repeater(
+                    torch.utils.data.DataLoader(
+                        CompDataset(X=self._user_datasets[i][0], Y=self._user_datasets[i][1]),
+                        batch_size=batch_size,
+                        shuffle=True,
+                    )
+                )
+            )
 
     def _get_raw_df(self):
         dfs = []
@@ -284,15 +304,17 @@ class UserRoundData(object):
             user_idx: int,  in [0, self.n_users)
             n_round: int, round number
         """
-        if n_round_samples == -1:
-            return self._user_datasets[user_idx]
+        # if n_round_samples == -1:
+        #     return self._user_datasets[user_idx]
+        #
+        # n_samples = len(self._user_datasets[user_idx][1])
+        #
+        # choices = np.random.choice(n_samples, min(n_samples, n_round_samples))
+        #
+        # return self._user_datasets[user_idx][0][choices], self._user_datasets[
+        #     user_idx][1][choices]
 
-        n_samples = len(self._user_datasets[user_idx][1])
-
-        choices = np.random.choice(n_samples, min(n_samples, n_round_samples))
-
-        return self._user_datasets[user_idx][0][choices], self._user_datasets[
-            user_idx][1][choices]
+        return next(self._user_dataloader[user_idx])
 
     def uniform_random_loader(self, n_samples, batch_size=10000):
         X, Y = [], []

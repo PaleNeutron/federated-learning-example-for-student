@@ -7,15 +7,17 @@ from preprocess import CompDataset, ATTACK_TYPES
 
 
 def user_round_train(X, Y, model, device, debug=False, client_name=""):
-    data = CompDataset(X=X, Y=Y)
-    unique, counts = np.unique(Y, return_counts=True)
-    target_weights = {i: 1/ c for i, c in zip(unique, counts)}
-    weights = [target_weights[i] for i in Y]
-    sample_size = 100000
-    sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
+    # data = CompDataset(X=X, Y=Y)
+    # unique, counts = np.unique(Y, return_counts=True)
+    # target_weights = {i: 1/ c for i, c in zip(unique, counts)}
+    # weights = [target_weights[i] for i in Y]
+    # sample_size = 100000
+    # sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
     train_loader = torch.utils.data.DataLoader(
-        data,
-        batch_size=400,
+        torch.utils.data.TensorDataset(
+            X, Y
+        ),
+        batch_size=len(Y),
         shuffle=True,
         # sampler=sampler,
     )

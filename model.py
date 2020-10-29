@@ -76,7 +76,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.batch_size = 64
         self.test_batch_size = 1000
         self.lr = 0.01
-        self.n_max_rounds = 1000
+        self.n_max_rounds = 10000
         self.log_interval = 10
         self.n_round_samples = 1600
         self.testbase = self.TEST_BASE_DIR
@@ -112,6 +112,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
 
         training_start = datetime.now()
         model = None
+        self.urd.prepare_data_loader(self.n_round_samples)
         for r in range(1, self.n_max_rounds + 1):
             start = datetime.now()
             for u in range(0, self.n_users):
@@ -134,7 +135,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                 datetime.now() - training_start,
             ))
 
-            if model is not None and r % 1000 == 0:
+            if model is not None and r % 100 == 0:
                 self.predict(model,
                              device,
                              self.urd.uniform_random_loader(self.N_VALIDATION),
