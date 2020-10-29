@@ -67,7 +67,7 @@ class ParameterServer(object):
 
 class FedAveragingGradsTestSuit(unittest.TestCase):
     RESULT_DIR = 'result'
-    N_VALIDATION = 10000
+    N_VALIDATION = 100000
     TEST_BASE_DIR = '/tmp/'
 
     def setUp(self):
@@ -78,7 +78,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         self.lr = 0.01
         self.n_max_rounds = 1000
         self.log_interval = 10
-        self.n_round_samples = -1
+        self.n_round_samples = 100000
         self.testbase = self.TEST_BASE_DIR
         self.testworkdir = os.path.join(self.testbase, 'competetion-test')
 
@@ -156,11 +156,22 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         if not loader:
             return
         prediction = []
+        confidence = []
         with torch.no_grad():
             for data in loader:
-                pred = model(data.to(device)).argmax(dim=1, keepdim=True)
+                output = model(data.to(device))
+                pred =output.argmax(dim=1, keepdim=True)
+                # label 1 is lost in training data, assume it should be here
+                confidence.extend(output.max(dim=1,)[0].reshape(-1).tolist())
                 prediction.extend(pred.reshape(-1).tolist())
 
+        # # label 1 threshold
+        threshold = sorted(confidence)[int(len(loader.dataset) * 5.84 / 100 / 3)]
+        for i in range(len(confidence)):
+            if confidence[i] < threshold:
+                prediction[i] = 1
+
+        print("{}/{} label 1 is predicted".format(prediction.count(1), len(prediction)))
         self.save_prediction(prediction)
 
     def predict(self, model, device, test_loader, prefix=""):
@@ -169,6 +180,7 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
         correct = 0
         prediction = []
         real = []
+        confidence = []
         with torch.no_grad():
             for data, target in test_loader:
                 data, target = data.to(device), target.to(device)
@@ -176,10 +188,6 @@ class FedAveragingGradsTestSuit(unittest.TestCase):
                 test_loss += F.nll_loss(
                     output, target,
                     reduction='sum').item()  # sum up batch loss
-
-                # label 1 is lost in training data, assume it should be here
-                output[:, 1] = torch.mean(output, 1) + 1
-
                 pred = output.argmax(
                     dim=1,
                     keepdim=True)  # get the index of the max log-probability
