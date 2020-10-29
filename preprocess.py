@@ -222,8 +222,8 @@ class UserRoundData(object):
         n = 0
         for root, dirs, fnames in os.walk(self.data_dir):
             for fname in fnames:
-                # if fname != "type-total-8-150000-samples.csv":
-                #     continue
+                if fname != "type-total-8-150000-samples.csv":
+                    continue
                 fpath = os.path.join(root, fname)
                 # each file is for each user
                 # user data can not be shared among users
@@ -289,8 +289,6 @@ class UserRoundData(object):
 
         n_samples = len(self._user_datasets[user_idx][1])
 
-        # 平衡samples, WeightedRandomSampler
-
         choices = np.random.choice(n_samples, min(n_samples, n_round_samples))
 
         return self._user_datasets[user_idx][0][choices], self._user_datasets[
@@ -328,8 +326,8 @@ class UserRoundData(object):
             0: 5.84
         }
         weights = [target_weights[i] for i in data.Y]
-        sample_size = 20000
-        sampler = WeightedRandomSampler(weights, num_samples=sample_size, replacement=True)
+        # sample_size = 50000
+        sampler = WeightedRandomSampler(weights, num_samples=batch_size, replacement=True)
         train_loader = torch.utils.data.DataLoader(
             data,
             batch_size=min(batch_size, n_samples),
