@@ -90,6 +90,8 @@ def main():
 
     torch.manual_seed(args.seed)
 
+    run(epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
+        test_batch_size=args.batch_size, use_cuda=args.use_cuda, gamma=args.gamma, save_model=args.save_model)
 
 
 
@@ -141,11 +143,11 @@ def run(epochs=500, lr=0.01, batch_size=1024, test_batch_size=1024, use_cuda=Tru
     
     model = Net().to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
+    for epoch in range(1, epochs + 1):
+        train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         # scheduler.step()
 
